@@ -1,0 +1,2068 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌙 SomnoSalud - Evaluación del Insomnio</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #e4e4e7;
+        }
+
+        .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+
+        .header { text-align: center; padding: 30px 0 20px; }
+
+        .header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .header p { color: #a1a1aa; font-size: 1.1rem; }
+
+        /* STEPPER */
+        .stepper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 30px 0;
+            padding: 0 20px;
+        }
+
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        .step-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.2rem;
+            transition: all 0.3s;
+        }
+
+        .step-circle.pending {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            color: #6b7280;
+        }
+
+        .step-circle.active {
+            background: linear-gradient(135deg, #818cf8, #6366f1);
+            border: 2px solid #818cf8;
+            color: white;
+            box-shadow: 0 0 20px rgba(129, 140, 248, 0.4);
+        }
+
+        .step-circle.completed {
+            background: #10b981;
+            border: 2px solid #10b981;
+            color: white;
+        }
+
+        .step-label {
+            margin-top: 8px;
+            font-size: 0.75rem;
+            color: #a1a1aa;
+            text-align: center;
+            max-width: 80px;
+        }
+
+        .step-connector {
+            width: 60px;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 0 10px;
+            margin-bottom: 25px;
+        }
+
+        .step-connector.completed {
+            background: #10b981;
+        }
+
+        /* CARDS */
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .card h2 { font-size: 1.3rem; color: #f4f4f5; margin-bottom: 16px; }
+
+        /* INCENTIVE BOX */
+        .incentive-box {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(6, 182, 212, 0.15));
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .incentive-box .icon { font-size: 1.5rem; }
+        .incentive-box .text { color: #6ee7b7; font-size: 0.95rem; line-height: 1.5; }
+        .incentive-box .highlight { color: #fbbf24; font-weight: 600; }
+
+        /* PROGRESS INFO */
+        .progress-info {
+            background: rgba(129, 140, 248, 0.1);
+            border-radius: 10px;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .progress-text { color: #a5b4fc; font-size: 0.9rem; }
+        .progress-percent {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #818cf8;
+        }
+
+        /* INPUTS */
+        .question-group { margin-bottom: 20px; }
+
+        .question-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #d4d4d8;
+        }
+
+        .question-group input, .question-group select {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            color: #f4f4f5;
+            font-size: 1rem;
+        }
+
+        .question-group input:focus, .question-group select:focus {
+            outline: none;
+            border-color: #818cf8;
+            box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.2);
+        }
+
+        /* BUTTONS */
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #818cf8, #6366f1);
+            color: white;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #d4d4d8;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .btn-group .btn { flex: 1; }
+
+        /* SEVERITY */
+        .severity-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .severity-none { background: #10b981; color: white; }
+        .severity-mild { background: #f59e0b; color: white; }
+        .severity-moderate { background: #f97316; color: white; }
+        .severity-severe { background: #ef4444; color: white; }
+
+        /* RED FLAGS - Ahora más amigables */
+        .precaution-card {
+            background: rgba(251, 191, 36, 0.1);
+            border: 1px solid rgba(251, 191, 36, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+
+        .precaution-title {
+            color: #fbbf24;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .precaution-text {
+            color: #fde68a;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        /* URGENT FLAG */
+        .urgent-flag {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+
+        .urgent-flag-title { color: #f87171; font-weight: 600; margin-bottom: 8px; }
+        .urgent-flag-action { color: #fca5a5; font-size: 0.9rem; }
+
+        /* EXPANDABLE RECOMMENDATIONS */
+        .recommendation {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            margin-bottom: 12px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s;
+        }
+
+        .recommendation:hover {
+            border-color: rgba(129, 140, 248, 0.3);
+        }
+
+        .recommendation-header {
+            padding: 16px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .recommendation-title {
+            color: #a5b4fc;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .recommendation-expand {
+            color: #818cf8;
+            font-size: 1.2rem;
+            transition: transform 0.3s;
+        }
+
+        .recommendation-expand.open {
+            transform: rotate(180deg);
+        }
+
+        .recommendation-content {
+            padding: 0 16px 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .recommendation-desc {
+            color: #d1d5db;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+
+        .recommendation-evidence {
+            display: inline-block;
+            background: rgba(129, 140, 248, 0.2);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            color: #818cf8;
+            margin-right: 8px;
+        }
+
+        /* SUPPLEMENT DETAILS */
+        .supplement-details {
+            background: rgba(129, 140, 248, 0.1);
+            border-radius: 10px;
+            padding: 14px;
+            margin-top: 12px;
+        }
+
+        .supplement-section {
+            margin-bottom: 12px;
+        }
+
+        .supplement-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .supplement-label {
+            color: #a5b4fc;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+
+        .supplement-value {
+            color: #e4e4e7;
+            font-size: 0.9rem;
+        }
+
+        /* MARKETPLACE BUTTON */
+        .marketplace-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            margin-top: 12px;
+            transition: all 0.2s;
+        }
+
+        .marketplace-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        /* IMC INDICATOR */
+        .imc-display {
+            background: rgba(129, 140, 248, 0.15);
+            border-radius: 10px;
+            padding: 14px;
+            margin-top: 16px;
+            text-align: center;
+        }
+
+        .imc-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #818cf8;
+        }
+
+        .imc-label {
+            color: #a1a1aa;
+            font-size: 0.85rem;
+        }
+
+        .imc-category {
+            margin-top: 8px;
+            font-weight: 600;
+        }
+
+        /* CHECKBOX */
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 22px;
+            height: 22px;
+            accent-color: #818cf8;
+        }
+
+        /* YES/NO BUTTONS */
+        .yes-no-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .yes-no-btn {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            color: #d4d4d8;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .yes-no-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .yes-no-btn.selected-yes {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: #ef4444;
+            color: #fca5a5;
+        }
+
+        .yes-no-btn.selected-no {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: #10b981;
+            color: #6ee7b7;
+        }
+
+        /* DISCLAIMER */
+        .disclaimer {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 10px;
+            padding: 16px;
+            margin-top: 20px;
+            font-size: 0.85rem;
+            color: #93c5fd;
+        }
+
+        /* GRID */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+        }
+
+        /* WELCOME SCREEN */
+        .welcome-screen {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .welcome-icon { font-size: 4rem; margin-bottom: 20px; }
+
+        .welcome-title {
+            font-size: 1.8rem;
+            color: #f4f4f5;
+            margin-bottom: 16px;
+        }
+
+        .welcome-text {
+            color: #a1a1aa;
+            font-size: 1.05rem;
+            line-height: 1.6;
+            max-width: 600px;
+            margin: 0 auto 30px;
+        }
+
+        .feature-list {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+
+        .feature-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .feature-item .icon { font-size: 1.3rem; }
+        .feature-item .text { color: #d4d4d8; font-size: 0.9rem; }
+
+        /* RESULT CARD */
+        .result-card {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1));
+            border: 1px solid rgba(129, 140, 248, 0.3);
+        }
+
+        /* SCORE DISPLAY */
+        .score-big {
+            text-align: center;
+            padding: 30px;
+            background: rgba(129, 140, 248, 0.1);
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+
+        .score-big .number {
+            font-size: 4rem;
+            font-weight: bold;
+            color: #818cf8;
+        }
+
+        .score-big .label {
+            color: #a1a1aa;
+            margin-top: 8px;
+        }
+
+        .score-big .interpretation {
+            font-weight: 600;
+            margin-top: 12px;
+            font-size: 1.1rem;
+        }
+
+        /* AUTO-CALC INFO */
+        .auto-calc-box {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 16px;
+            margin-top: 20px;
+        }
+
+        .auto-calc-title {
+            color: #a1a1aa;
+            font-size: 0.85rem;
+            margin-bottom: 12px;
+        }
+
+        .auto-calc-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .auto-calc-item:last-child { border-bottom: none; }
+
+        /* QUESTION NUMBER */
+        .question-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            background: rgba(129, 140, 248, 0.2);
+            border-radius: 50%;
+            color: #818cf8;
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-right: 10px;
+        }
+
+        /* LAB & DNA SECTIONS */
+        .feature-card {
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px dashed rgba(129, 140, 248, 0.4);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .feature-card-icon {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+        }
+
+        .feature-card-title {
+            color: #a5b4fc;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .feature-card-desc {
+            color: #a1a1aa;
+            font-size: 0.9rem;
+            margin-bottom: 16px;
+        }
+
+        .coming-soon-badge {
+            display: inline-block;
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        /* OPTIONAL SECTION TOGGLE */
+        .optional-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 16px;
+            cursor: pointer;
+        }
+
+        .optional-toggle:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .toggle-label {
+            color: #d4d4d8;
+            font-weight: 500;
+        }
+
+        .toggle-switch {
+            width: 50px;
+            height: 26px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 13px;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .toggle-switch.active {
+            background: #818cf8;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: all 0.3s;
+        }
+
+        .toggle-switch.active::after {
+            left: 26px;
+        }
+
+        /* LAB & DNA INPUTS */
+        .lab-section {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .lab-section-title {
+            color: #6ee7b7;
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .lab-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+        }
+
+        .lab-input-group {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 12px;
+        }
+
+        .lab-input-label {
+            color: #a1a1aa;
+            font-size: 0.8rem;
+            margin-bottom: 4px;
+        }
+
+        .lab-input-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .lab-input {
+            flex: 1;
+            padding: 8px 10px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 6px;
+            color: #f4f4f5;
+            font-size: 0.9rem;
+            width: 80px;
+        }
+
+        .lab-input:focus {
+            outline: none;
+            border-color: #10b981;
+        }
+
+        .lab-unit {
+            color: #6b7280;
+            font-size: 0.8rem;
+            min-width: 50px;
+        }
+
+        .lab-status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .lab-status.low { background: #fef3c7; color: #92400e; }
+        .lab-status.normal { background: #d1fae5; color: #065f46; }
+        .lab-status.high { background: #fee2e2; color: #991b1b; }
+
+        .dna-toggle-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .dna-toggle {
+            padding: 8px 14px;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 20px;
+            background: rgba(139, 92, 246, 0.1);
+            color: #c4b5fd;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .dna-toggle:hover {
+            background: rgba(139, 92, 246, 0.2);
+        }
+
+        .dna-toggle.selected {
+            background: #8b5cf6;
+            border-color: #8b5cf6;
+            color: white;
+        }
+
+        .deficiency-alert {
+            background: rgba(251, 191, 36, 0.15);
+            border: 1px solid rgba(251, 191, 36, 0.4);
+            border-radius: 10px;
+            padding: 14px;
+            margin-top: 16px;
+        }
+
+        .deficiency-alert-title {
+            color: #fbbf24;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .deficiency-alert-item {
+            color: #fde68a;
+            font-size: 0.9rem;
+            padding: 4px 0;
+        }
+
+        @media (max-width: 600px) {
+            .header h1 { font-size: 1.8rem; }
+            .container { padding: 12px; }
+            .stepper { flex-wrap: wrap; gap: 10px; }
+            .step-connector { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        // ============================================
+        // TRATAMIENTOS CON INFO DETALLADA
+        // ============================================
+        const TRATAMIENTOS = {
+            conductuales: [
+                {
+                    id: 'COND-001',
+                    nombre: 'Higiene del Sueño',
+                    descripcion: 'Conjunto de hábitos y prácticas que favorecen un sueño de calidad.',
+                    detalles: {
+                        que_es: 'Son modificaciones del estilo de vida y el entorno que preparan tu cuerpo para dormir mejor.',
+                        como_hacerlo: [
+                            'Mantener horarios regulares de sueño (acostarse y levantarse a la misma hora)',
+                            'Evitar pantallas (celular, TV, tablet) 1 hora antes de dormir',
+                            'Crear un ambiente oscuro, silencioso y fresco (18-22°C)',
+                            'No consumir cafeína después de las 14:00',
+                            'Evitar alcohol cerca de la hora de dormir',
+                            'Hacer ejercicio regular pero no cerca de acostarse'
+                        ],
+                        tiempo_resultados: '2-4 semanas para notar mejoras',
+                        efectividad: '60-70% de mejora en calidad de sueño'
+                    },
+                    evidencia: 'A',
+                    primera_linea: true,
+                    tipo: 'conductual'
+                },
+                {
+                    id: 'COND-002',
+                    nombre: 'TCC-I (Terapia Cognitivo-Conductual para Insomnio)',
+                    descripcion: 'El tratamiento más efectivo para el insomnio crónico, con mejores resultados a largo plazo que los medicamentos.',
+                    detalles: {
+                        que_es: 'Terapia estructurada que combina técnicas para cambiar pensamientos y comportamientos que interfieren con el sueño.',
+                        componentes: [
+                            'Restricción de sueño: limitar tiempo en cama para aumentar eficiencia',
+                            'Control de estímulos: asociar la cama solo con dormir',
+                            'Reestructuración cognitiva: cambiar pensamientos negativos sobre el sueño',
+                            'Técnicas de relajación',
+                            'Educación sobre el sueño'
+                        ],
+                        duracion: '6-8 sesiones típicamente',
+                        efectividad: '70-80% de pacientes mejoran significativamente'
+                    },
+                    evidencia: 'A',
+                    primera_linea: true,
+                    tipo: 'conductual'
+                },
+                {
+                    id: 'COND-003',
+                    nombre: 'Técnicas de Relajación',
+                    descripcion: 'Métodos para reducir la activación física y mental que impide conciliar el sueño.',
+                    detalles: {
+                        que_es: 'Ejercicios que activan el sistema nervioso parasimpático, preparando el cuerpo para el descanso.',
+                        tecnicas: [
+                            'Respiración diafragmática 4-7-8: inhalar 4 seg, retener 7, exhalar 8',
+                            'Relajación muscular progresiva: tensar y relajar grupos musculares',
+                            'Mindfulness y meditación guiada',
+                            'Visualización de escenas tranquilas'
+                        ],
+                        cuando: 'Practicar 20-30 minutos antes de acostarse',
+                        efectividad: '50-60% reducción del tiempo para dormirse'
+                    },
+                    evidencia: 'B',
+                    primera_linea: true,
+                    tipo: 'conductual'
+                }
+            ],
+            suplementos: [
+                {
+                    id: 'SUP-001',
+                    nombre: 'Melatonina',
+                    descripcion: 'Hormona natural que regula el ciclo sueño-vigilia.',
+                    detalles: {
+                        que_es: 'Hormona producida por la glándula pineal que señala al cuerpo que es hora de dormir.',
+                        dosis: '0.5-3 mg (empezar con dosis baja)',
+                        cuando_tomar: '30-60 minutos antes de acostarse',
+                        forma_optima: 'Sublingual o liberación inmediata para inicio del sueño',
+                        combinaciones: 'Puede combinarse con magnesio para potenciar efecto',
+                        absorcion: 'Tomar con el estómago vacío o comida ligera. Evitar comidas grasas.',
+                        duracion: 'Uso a corto plazo (2-4 semanas) o intermitente'
+                    },
+                    evidencia: 'B',
+                    contraindicaciones: ['Anticoagulantes', 'Embarazo', 'Enfermedades autoinmunes'],
+                    tipo: 'suplemento',
+                    marketplace: {
+                        disponible: true,
+                        precio_referencia: '$5.000-15.000 ARS',
+                        donde: 'Farmacias y dietéticas'
+                    }
+                },
+                {
+                    id: 'SUP-002',
+                    nombre: 'Magnesio',
+                    descripcion: 'Mineral esencial para la relajación muscular y nerviosa.',
+                    detalles: {
+                        que_es: 'Mineral que participa en más de 300 reacciones enzimáticas, incluyendo la regulación del sistema nervioso.',
+                        dosis: '200-400 mg',
+                        formas_recomendadas: [
+                            'Glicinato de magnesio: mejor absorción, más relajante (ideal para sueño)',
+                            'Citrato de magnesio: buena absorción, puede tener efecto laxante suave',
+                            'Treonato de magnesio: cruza barrera hematoencefálica (para cognición)'
+                        ],
+                        cuando_tomar: '1-2 horas antes de dormir',
+                        combinaciones: 'Excelente con vitamina B6 (aumenta absorción) y melatonina',
+                        absorcion: 'Tomar con comida para evitar molestias gástricas. Separar de calcio y zinc.',
+                        signos_deficiencia: 'Calambres, fatiga, irritabilidad, dificultad para dormir'
+                    },
+                    evidencia: 'B',
+                    contraindicaciones: ['Insuficiencia renal severa'],
+                    tipo: 'suplemento',
+                    marketplace: {
+                        disponible: true,
+                        precio_referencia: '$8.000-20.000 ARS',
+                        donde: 'Farmacias, dietéticas, tiendas naturales'
+                    }
+                },
+                {
+                    id: 'SUP-003',
+                    nombre: 'L-Teanina',
+                    descripcion: 'Aminoácido del té verde que promueve la relajación sin causar somnolencia.',
+                    detalles: {
+                        que_es: 'Aminoácido que aumenta ondas alfa cerebrales, promoviendo un estado de calma alerta.',
+                        dosis: '100-200 mg',
+                        cuando_tomar: '30-60 minutos antes de dormir (o durante el día para ansiedad)',
+                        forma_optima: 'Cápsulas o polvo sublingual',
+                        combinaciones: 'Sinérgica con magnesio. Potencia el GABA naturalmente.',
+                        absorcion: 'Se absorbe bien con o sin comida. Actúa en 30-40 minutos.',
+                        beneficios_extra: 'Reduce ansiedad diurna sin causar sueño, mejora concentración'
+                    },
+                    evidencia: 'B',
+                    contraindicaciones: [],
+                    tipo: 'suplemento',
+                    marketplace: {
+                        disponible: true,
+                        precio_referencia: '$10.000-25.000 ARS',
+                        donde: 'Dietéticas especializadas, tiendas online'
+                    }
+                },
+                {
+                    id: 'SUP-004',
+                    nombre: 'Glicina',
+                    descripcion: 'Aminoácido que mejora la calidad del sueño y reduce la temperatura corporal.',
+                    detalles: {
+                        que_es: 'Aminoácido que actúa como neurotransmisor inhibitorio y ayuda a regular la temperatura corporal para el sueño.',
+                        dosis: '3 gramos',
+                        cuando_tomar: '30-60 minutos antes de dormir',
+                        forma_optima: 'Polvo disuelto en agua (sabor ligeramente dulce)',
+                        combinaciones: 'Combina muy bien con magnesio glicinato (doble acción)',
+                        absorcion: 'Excelente absorción. Puede tomarse con o sin comida.',
+                        beneficios_extra: 'Mejora sensación de descanso al despertar, apoya la síntesis de colágeno'
+                    },
+                    evidencia: 'B',
+                    contraindicaciones: [],
+                    tipo: 'suplemento',
+                    marketplace: {
+                        disponible: true,
+                        precio_referencia: '$6.000-12.000 ARS',
+                        donde: 'Tiendas de suplementos deportivos, dietéticas'
+                    }
+                }
+            ]
+        };
+
+        // ============================================
+        // CALCULAR IMC
+        // ============================================
+        function calcularIMC(peso, altura) {
+            if (!peso || !altura || altura === 0) return null;
+            const alturaMetros = altura / 100;
+            return peso / (alturaMetros * alturaMetros);
+        }
+
+        function categoriaIMC(imc) {
+            if (!imc) return { texto: '-', color: '#a1a1aa' };
+            if (imc < 18.5) return { texto: 'Bajo peso', color: '#60a5fa' };
+            if (imc < 25) return { texto: 'Normal', color: '#10b981' };
+            if (imc < 30) return { texto: 'Sobrepeso', color: '#f59e0b' };
+            if (imc < 35) return { texto: 'Obesidad grado I', color: '#f97316' };
+            if (imc < 40) return { texto: 'Obesidad grado II', color: '#ef4444' };
+            return { texto: 'Obesidad grado III', color: '#dc2626' };
+        }
+
+        // ============================================
+        // EVALUACIÓN
+        // ============================================
+        function evaluarInsomnio(datos) {
+            const resultado = {
+                severidad: '',
+                descripcion: '',
+                isi_score: datos.isi,
+                stop_bang_score: datos.stop_bang,
+                banderas_rojas: [],
+                precauciones: [],
+                recomendaciones: [],
+                fenotipo: null,
+                precision: 0,
+                imc: datos.imc
+            };
+
+            // Calcular precisión
+            let precisionBase = 60;
+            if (datos.stop_bang !== null) precisionBase += 15;
+            if (datos.latencia_sueno > 0) precisionBase += 8;
+            if (datos.despertares > 0) precisionBase += 7;
+            if (datos.sexo) precisionBase += 5;
+            if (datos.imc) precisionBase += 5;
+            resultado.precision = Math.min(precisionBase, 95);
+
+            // Severidad ISI
+            if (datos.isi <= 7) { resultado.severidad = 'sin_insomnio'; resultado.descripcion = 'Sin insomnio clínico significativo'; }
+            else if (datos.isi <= 14) { resultado.severidad = 'leve'; resultado.descripcion = 'Insomnio subclínico o leve'; }
+            else if (datos.isi <= 21) { resultado.severidad = 'moderado'; resultado.descripcion = 'Insomnio clínico moderado'; }
+            else { resultado.severidad = 'severo'; resultado.descripcion = 'Insomnio clínico severo'; }
+
+            // Bandera roja URGENTE (solo ideación suicida)
+            if (datos.ideacion_suicida) {
+                resultado.banderas_rojas.push({
+                    titulo: '⚠️ Necesitás apoyo profesional',
+                    accion: 'Es importante que hables con un profesional de salud mental. Línea de crisis: 135 (Argentina).'
+                });
+            }
+
+            // Precauciones (más amigables)
+            if (datos.stop_bang >= 5) {
+                resultado.precauciones.push({
+                    titulo: '😴 Posible apnea del sueño',
+                    texto: 'Tu evaluación sugiere que podrías tener apnea del sueño. Sería bueno que consultes con un médico para una polisomnografía antes de iniciar tratamiento para el insomnio.'
+                });
+            } else if (datos.stop_bang >= 3) {
+                resultado.precauciones.push({
+                    titulo: '😴 Evaluá si roncás o te ahogás al dormir',
+                    texto: 'Tenés algunos factores de riesgo para apnea. Si tu pareja nota que roncás mucho o dejás de respirar, consultá con tu médico.'
+                });
+            }
+
+            if (datos.edad >= 65) {
+                resultado.precauciones.push({
+                    titulo: '👴 Consideraciones por edad',
+                    texto: 'A partir de los 65 años, es preferible evitar sedantes fuertes. Las técnicas conductuales son especialmente efectivas y seguras para vos.'
+                });
+            }
+
+            if (datos.embarazo) {
+                resultado.precauciones.push({
+                    titulo: '🤰 Embarazo o lactancia',
+                    texto: 'Durante esta etapa, las medidas no farmacológicas son las más seguras. Consultá con tu obstetra antes de tomar cualquier suplemento.'
+                });
+            }
+
+            if (datos.imc && datos.imc >= 35) {
+                resultado.precauciones.push({
+                    titulo: '⚖️ IMC elevado',
+                    texto: 'Un IMC alto puede contribuir a problemas de sueño, especialmente apnea. Trabajar en el peso puede mejorar significativamente tu descanso.'
+                });
+            }
+
+            // Fenotipo
+            if (datos.latencia_sueno > 30 && datos.despertares <= 1) resultado.fenotipo = { tipo: 'ONSET', nombre: 'Insomnio de inicio' };
+            else if (datos.latencia_sueno <= 30 && datos.despertares > 2) resultado.fenotipo = { tipo: 'MANTENIMIENTO', nombre: 'Insomnio de mantenimiento' };
+            else if (datos.latencia_sueno > 30 && datos.despertares > 2) resultado.fenotipo = { tipo: 'MIXTO', nombre: 'Insomnio mixto' };
+
+            // Recomendaciones
+            resultado.recomendaciones.push(TRATAMIENTOS.conductuales[0]);
+            if (resultado.severidad !== 'sin_insomnio') {
+                resultado.recomendaciones.push(TRATAMIENTOS.conductuales[1]);
+                resultado.recomendaciones.push(TRATAMIENTOS.conductuales[2]);
+            }
+            if ((resultado.severidad === 'moderado' || resultado.severidad === 'severo') && !datos.embarazo) {
+                if (!datos.anticoagulantes) resultado.recomendaciones.push(TRATAMIENTOS.suplementos[0]);
+                resultado.recomendaciones.push(TRATAMIENTOS.suplementos[1]);
+                resultado.recomendaciones.push(TRATAMIENTOS.suplementos[2]);
+                resultado.recomendaciones.push(TRATAMIENTOS.suplementos[3]);
+            }
+
+            return resultado;
+        }
+
+        // ============================================
+        // APP PRINCIPAL
+        // ============================================
+        function App() {
+            const [step, setStep] = useState(0);
+            const [formData, setFormData] = useState({
+                edad: '', sexo: '', peso: '', altura: '',
+                isi: null, stop_bang: null,
+                latencia_sueno: '', despertares: '',
+                ideacion_suicida: false, embarazo: false, anticoagulantes: false,
+                mostrarCondiciones: false
+            });
+            const [resultado, setResultado] = useState(null);
+
+            const imc = calcularIMC(parseFloat(formData.peso), parseFloat(formData.altura));
+
+            const handleChange = (e) => {
+                const { name, value, type, checked } = e.target;
+                setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+            };
+
+            const handleEvaluar = () => {
+                const datos = {
+                    ...formData,
+                    edad: parseInt(formData.edad) || 0,
+                    isi: formData.isi || 0,
+                    stop_bang: formData.stop_bang,
+                    latencia_sueno: parseInt(formData.latencia_sueno) || 0,
+                    despertares: parseInt(formData.despertares) || 0,
+                    imc: imc
+                };
+                setResultado(evaluarInsomnio(datos));
+                setStep(5);
+            };
+
+            const steps = [
+                { label: 'Inicio', icon: '👋' },
+                { label: 'Datos', icon: '📋' },
+                { label: 'ISI', icon: '📝' },
+                { label: 'Apnea', icon: '😴' },
+                { label: 'Resultado', icon: '📊' }
+            ];
+
+            const getStepStatus = (i) => {
+                if (i < step) return 'completed';
+                if (i === step) return 'active';
+                return 'pending';
+            };
+
+            return (
+                <div className="container">
+                    <div className="header">
+                        <h1>🌙 SomnoSalud</h1>
+                        <p>Evaluación Personalizada del Insomnio</p>
+                    </div>
+
+                    {/* STEPPER */}
+                    {step > 0 && step < 5 && (
+                        <div className="stepper">
+                            {steps.slice(1, 5).map((s, i) => (
+                                <React.Fragment key={i}>
+                                    <div className="step">
+                                        <div className={`step-circle ${getStepStatus(i + 1)}`}>
+                                            {getStepStatus(i + 1) === 'completed' ? '✓' : s.icon}
+                                        </div>
+                                        <div className="step-label">{s.label}</div>
+                                    </div>
+                                    {i < 3 && <div className={`step-connector ${i + 1 < step ? 'completed' : ''}`} />}
+                                </React.Fragment>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* PASO 0: BIENVENIDA */}
+                    {step === 0 && (
+                        <div className="card">
+                            <div className="welcome-screen">
+                                <div className="welcome-icon">🌙</div>
+                                <div className="welcome-title">Bienvenido/a a tu evaluación del sueño</div>
+                                <div className="welcome-text">
+                                    En los próximos minutos, te guiaremos a través de una evaluación completa
+                                    para entender mejor tus problemas de sueño y ofrecerte recomendaciones personalizadas
+                                    basadas en evidencia científica.
+                                </div>
+
+                                <div className="feature-list">
+                                    <div className="feature-item">
+                                        <span className="icon">⏱️</span>
+                                        <span className="text">5-7 minutos</span>
+                                    </div>
+                                    <div className="feature-item">
+                                        <span className="icon">🔬</span>
+                                        <span className="text">Basado en ciencia</span>
+                                    </div>
+                                    <div className="feature-item">
+                                        <span className="icon">🎯</span>
+                                        <span className="text">100% personalizado</span>
+                                    </div>
+                                </div>
+
+                                <button className="btn btn-primary" onClick={() => setStep(1)}>
+                                    Comenzar Evaluación →
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* PASO 1: DATOS BÁSICOS con peso/altura */}
+                    {step === 1 && (
+                        <>
+                            <div className="incentive-box">
+                                <span className="icon">💡</span>
+                                <div className="text">
+                                    <strong>¿Por qué estos datos?</strong><br/>
+                                    Tu edad, peso y características nos permiten <span className="highlight">ajustar las recomendaciones
+                                    y detectar riesgo de apnea</span> de forma automática.
+                                </div>
+                            </div>
+
+                            <div className="card">
+                                <h2>📋 Paso 1: Tus datos básicos</h2>
+
+                                <div className="grid-2">
+                                    <div className="question-group">
+                                        <label>¿Cuántos años tenés?</label>
+                                        <input type="number" name="edad" value={formData.edad} onChange={handleChange} placeholder="Ej: 45" min="18" max="100" />
+                                    </div>
+                                    <div className="question-group">
+                                        <label>Sexo biológico</label>
+                                        <select name="sexo" value={formData.sexo} onChange={handleChange}>
+                                            <option value="">Seleccionar...</option>
+                                            <option value="M">Masculino</option>
+                                            <option value="F">Femenino</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="grid-3">
+                                    <div className="question-group">
+                                        <label>Peso (kg)</label>
+                                        <input type="number" name="peso" value={formData.peso} onChange={handleChange} placeholder="Ej: 75" min="30" max="250" />
+                                    </div>
+                                    <div className="question-group">
+                                        <label>Altura (cm)</label>
+                                        <input type="number" name="altura" value={formData.altura} onChange={handleChange} placeholder="Ej: 170" min="100" max="220" />
+                                    </div>
+                                    {imc && (
+                                        <div className="imc-display">
+                                            <div className="imc-value">{imc.toFixed(1)}</div>
+                                            <div className="imc-label">IMC</div>
+                                            <div className="imc-category" style={{color: categoriaIMC(imc).color}}>
+                                                {categoriaIMC(imc).texto}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="grid-2" style={{marginTop: '16px'}}>
+                                    <div className="question-group">
+                                        <label>¿Cuánto tardás en dormirte? (minutos)</label>
+                                        <input type="number" name="latencia_sueno" value={formData.latencia_sueno} onChange={handleChange} placeholder="Ej: 30" min="0" />
+                                    </div>
+                                    <div className="question-group">
+                                        <label>¿Cuántas veces te despertás por noche?</label>
+                                        <input type="number" name="despertares" value={formData.despertares} onChange={handleChange} placeholder="Ej: 2" min="0" />
+                                    </div>
+                                </div>
+
+                                {/* NOTA DEV: Sección de condiciones especiales deshabilitada temporalmente
+                                    Se reactivará con preguntas más relevantes en próxima versión */}
+                                <div style={{
+                                    background: 'rgba(251, 191, 36, 0.1)',
+                                    border: '1px dashed rgba(251, 191, 36, 0.3)',
+                                    borderRadius: '10px',
+                                    padding: '12px 16px',
+                                    marginTop: '20px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '10px'
+                                }}>
+                                    <span style={{fontSize: '1.2rem'}}>🔧</span>
+                                    <span style={{color: '#fbbf24', fontSize: '0.85rem'}}>
+                                        Próximamente: preguntas sobre condiciones especiales para personalizar aún más tus recomendaciones.
+                                    </span>
+                                </div>
+
+                                <button className="btn btn-primary" onClick={() => setStep(2)} disabled={!formData.edad}>
+                                    {formData.edad ? 'Continuar al cuestionario →' : 'Ingresá tu edad para continuar'}
+                                </button>
+                            </div>
+                        </>
+                    )}
+
+                    {/* PASO 2: ISI */}
+                    {step === 2 && (
+                        <ISIQuestionnaire
+                            onComplete={(score) => { setFormData(prev => ({...prev, isi: score})); setStep(3); }}
+                            onBack={() => setStep(1)}
+                        />
+                    )}
+
+                    {/* PASO 3: STOP-BANG */}
+                    {step === 3 && (
+                        <STOPBANGQuestionnaire
+                            onComplete={(score) => { setFormData(prev => ({...prev, stop_bang: score})); handleEvaluar(); }}
+                            onSkip={() => { handleEvaluar(); }}
+                            onBack={() => setStep(2)}
+                            edad={parseInt(formData.edad) || 0}
+                            sexo={formData.sexo}
+                            imc={imc}
+                        />
+                    )}
+
+                    {/* PASO 5: RESULTADOS */}
+                    {step === 5 && resultado && (
+                        <ResultadoScreen
+                            resultado={resultado}
+                            formData={formData}
+                            onReset={() => {
+                                setStep(0);
+                                setResultado(null);
+                                setFormData({
+                                    edad: '', sexo: '', peso: '', altura: '',
+                                    isi: null, stop_bang: null,
+                                    latencia_sueno: '', despertares: '',
+                                    ideacion_suicida: false, embarazo: false, anticoagulantes: false,
+                                    mostrarCondiciones: false
+                                });
+                            }}
+                        />
+                    )}
+                </div>
+            );
+        }
+
+        // ============================================
+        // CUESTIONARIO ISI
+        // ============================================
+        function ISIQuestionnaire({ onComplete, onBack }) {
+            const [respuestas, setRespuestas] = useState({});
+
+            const preguntas = [
+                { texto: "Dificultad para quedarte dormido/a", tipo: "problema" },
+                { texto: "Dificultad para mantenerte dormido/a", tipo: "problema" },
+                { texto: "Problemas por despertarte muy temprano", tipo: "problema" },
+                { texto: "¿Qué tan satisfecho/a estás con tu patrón de sueño actual?", tipo: "satisfaccion" },
+                { texto: "¿Cuánto interfiere tu problema de sueño en tu día a día?", tipo: "problema" },
+                { texto: "¿Qué tan notorio es tu problema de sueño para otros?", tipo: "problema" },
+                { texto: "¿Qué tan preocupado/a estás por tu problema de sueño?", tipo: "problema" }
+            ];
+
+            const opcionesProblema = [
+                { valor: 0, texto: "Nada" },
+                { valor: 1, texto: "Un poco" },
+                { valor: 2, texto: "Algo" },
+                { valor: 3, texto: "Mucho" },
+                { valor: 4, texto: "Muchísimo" }
+            ];
+
+            const opcionesSatisfaccion = [
+                { valor: 0, texto: "Muy satisfecho/a" },
+                { valor: 1, texto: "Satisfecho/a" },
+                { valor: 2, texto: "Ni satisfecho/a ni insatisfecho/a" },
+                { valor: 3, texto: "Insatisfecho/a" },
+                { valor: 4, texto: "Muy insatisfecho/a" }
+            ];
+
+            const puntaje = Object.values(respuestas).reduce((a, b) => a + b, 0);
+            const respondidas = Object.keys(respuestas).length;
+            const completo = respondidas === 7;
+
+            const getInterpretacion = (s) => {
+                if (s <= 7) return { texto: "Sin insomnio clínico", color: "#10b981" };
+                if (s <= 14) return { texto: "Insomnio leve", color: "#f59e0b" };
+                if (s <= 21) return { texto: "Insomnio moderado", color: "#f97316" };
+                return { texto: "Insomnio severo", color: "#ef4444" };
+            };
+
+            return (
+                <>
+                    <div className="incentive-box">
+                        <span className="icon">🎯</span>
+                        <div className="text">
+                            <strong>Cuestionario ISI - El estándar de oro</strong><br/>
+                            Este cuestionario validado científicamente <span className="highlight">es usado en hospitales de todo el mundo</span> para evaluar el insomnio.
+                        </div>
+                    </div>
+
+                    <div className="progress-info">
+                        <span className="progress-text">Preguntas completadas: {respondidas} de 7</span>
+                        <span className="progress-percent">{Math.round((respondidas / 7) * 100)}%</span>
+                    </div>
+
+                    <div className="card">
+                        <h2>📝 Paso 2: Índice de Severidad del Insomnio</h2>
+                        <p style={{color: '#a1a1aa', marginBottom: '24px'}}>
+                            Pensá en las <strong>últimas 2 semanas</strong> al responder:
+                        </p>
+
+                        {preguntas.map((p, i) => {
+                            const opciones = p.tipo === 'satisfaccion' ? opcionesSatisfaccion : opcionesProblema;
+                            return (
+                                <div key={i} className="question-group">
+                                    <label><span className="question-number">{i + 1}</span>{p.texto}</label>
+                                    <select value={respuestas[i] ?? ''} onChange={(e) => setRespuestas(prev => ({...prev, [i]: parseInt(e.target.value)}))}>
+                                        <option value="">-- Seleccioná una opción --</option>
+                                        {opciones.map(o => <option key={o.valor} value={o.valor}>{o.valor} - {o.texto}</option>)}
+                                    </select>
+                                </div>
+                            );
+                        })}
+
+                        {completo && (
+                            <div className="score-big">
+                                <div className="number">{puntaje}</div>
+                                <div className="label">Puntaje ISI (de 28)</div>
+                                <div className="interpretation" style={{color: getInterpretacion(puntaje).color}}>
+                                    {getInterpretacion(puntaje).texto}
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="btn-group">
+                            <button className="btn btn-secondary" onClick={onBack}>← Volver</button>
+                            <button className="btn btn-primary" onClick={() => onComplete(puntaje)} disabled={!completo}>
+                                {completo ? `Continuar →` : `Completá las ${7 - respondidas} preguntas restantes`}
+                            </button>
+                        </div>
+                    </div>
+                </>
+            );
+        }
+
+        // ============================================
+        // CUESTIONARIO STOP-BANG (sin pregunta de IMC)
+        // ============================================
+        function STOPBANGQuestionnaire({ onComplete, onSkip, onBack, edad, sexo, imc }) {
+            const [respuestas, setRespuestas] = useState({ S: null, T: null, O: null, P: null, N: null });
+
+            const preguntas = [
+                { id: 'S', titulo: 'Ronquidos', pregunta: '¿Roncás fuerte? (que se escuche a través de puertas o tu pareja te codee)' },
+                { id: 'T', titulo: 'Cansancio', pregunta: '¿Te sentís frecuentemente cansado/a o somnoliento/a durante el día?' },
+                { id: 'O', titulo: 'Observado', pregunta: '¿Alguien observó que dejás de respirar mientras dormís?' },
+                { id: 'P', titulo: 'Presión', pregunta: '¿Tenés presión arterial alta o tomás medicación para eso?' },
+                { id: 'N', titulo: 'Cuello', pregunta: '¿Sentís que tenés el cuello grueso o usás talle de camisa 42 o más?' }
+            ];
+
+            const edadMayor50 = edad > 50;
+            const esMasculino = sexo === 'M';
+            const imcMayor35 = imc && imc > 35;
+            const respondidas = Object.values(respuestas).filter(v => v !== null).length;
+            const completo = respondidas === 5;
+
+            const puntaje = Object.values(respuestas).filter(v => v === true).length +
+                           (edadMayor50 ? 1 : 0) +
+                           (esMasculino ? 1 : 0) +
+                           (imcMayor35 ? 1 : 0);
+
+            const getInterpretacion = (s) => {
+                if (s <= 2) return { texto: "Bajo riesgo de apnea", color: "#10b981" };
+                if (s <= 4) return { texto: "Riesgo intermedio", color: "#f59e0b" };
+                return { texto: "Alto riesgo - consultá con tu médico", color: "#ef4444" };
+            };
+
+            return (
+                <>
+                    <div className="incentive-box">
+                        <span className="icon">😴</span>
+                        <div className="text">
+                            <strong>¿Por qué evaluar apnea?</strong><br/>
+                            La apnea del sueño puede causar o empeorar el insomnio. Detectarla <span className="highlight">mejora
+                            la efectividad del tratamiento</span> y previene complicaciones.
+                        </div>
+                    </div>
+
+                    <div className="progress-info">
+                        <span className="progress-text">Preguntas: {respondidas} de 5 (+ 3 automáticas)</span>
+                        <span className="progress-percent">{Math.round((respondidas / 5) * 100)}%</span>
+                    </div>
+
+                    <div className="card">
+                        <h2>😴 Paso 3: Evaluación de Apnea (STOP-BANG)</h2>
+
+                        {preguntas.map(p => (
+                            <div key={p.id} className="question-group">
+                                <label><span className="question-number">{p.id}</span>{p.titulo}</label>
+                                <div style={{color: '#d4d4d8', marginBottom: '10px', fontSize: '0.95rem'}}>{p.pregunta}</div>
+                                <div className="yes-no-group">
+                                    <button type="button" className={`yes-no-btn ${respuestas[p.id] === true ? 'selected-yes' : ''}`} onClick={() => setRespuestas(prev => ({...prev, [p.id]: true}))}>Sí</button>
+                                    <button type="button" className={`yes-no-btn ${respuestas[p.id] === false ? 'selected-no' : ''}`} onClick={() => setRespuestas(prev => ({...prev, [p.id]: false}))}>No</button>
+                                </div>
+                            </div>
+                        ))}
+
+                        <div className="auto-calc-box">
+                            <div className="auto-calc-title">📊 Calculado automáticamente de tus datos:</div>
+                            <div className="auto-calc-item">
+                                <span><strong>B</strong> - IMC mayor a 35</span>
+                                <span style={{color: imcMayor35 ? '#f87171' : '#6ee7b7'}}>
+                                    {imc ? `${imc.toFixed(1)} - ${imcMayor35 ? 'Sí (+1)' : 'No'}` : 'No calculado'}
+                                </span>
+                            </div>
+                            <div className="auto-calc-item">
+                                <span><strong>A</strong> - Edad mayor a 50</span>
+                                <span style={{color: edadMayor50 ? '#f87171' : '#6ee7b7'}}>{edadMayor50 ? 'Sí (+1)' : 'No'}</span>
+                            </div>
+                            <div className="auto-calc-item">
+                                <span><strong>G</strong> - Sexo masculino</span>
+                                <span style={{color: esMasculino ? '#f87171' : '#6ee7b7'}}>{esMasculino ? 'Sí (+1)' : 'No'}</span>
+                            </div>
+                        </div>
+
+                        {completo && (
+                            <div className="score-big">
+                                <div className="number">{puntaje}</div>
+                                <div className="label">Puntaje STOP-BANG (de 8)</div>
+                                <div className="interpretation" style={{color: getInterpretacion(puntaje).color}}>
+                                    {getInterpretacion(puntaje).texto}
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="btn-group">
+                            <button className="btn btn-secondary" onClick={onBack}>← Volver</button>
+                            <button className="btn btn-primary" onClick={() => onComplete(puntaje)} disabled={!completo}>
+                                {completo ? 'Ver mis resultados →' : `Respondé las ${5 - respondidas} restantes`}
+                            </button>
+                        </div>
+
+                        <button className="btn btn-secondary" style={{marginTop: '10px', opacity: 0.7}} onClick={onSkip}>
+                            Omitir este paso
+                        </button>
+                    </div>
+                </>
+            );
+        }
+
+        // ============================================
+        // RECOMENDACIÓN EXPANDIBLE
+        // ============================================
+        function RecomendacionExpandible({ rec, index }) {
+            const [expandido, setExpandido] = useState(false);
+            const esSuplemento = rec.tipo === 'suplemento';
+
+            return (
+                <div className="recommendation">
+                    <div className="recommendation-header" onClick={() => setExpandido(!expandido)}>
+                        <div className="recommendation-title">
+                            {index + 1}. {rec.nombre} {rec.primera_linea && '⭐'}
+                            {esSuplemento && ' 💊'}
+                        </div>
+                        <span className={`recommendation-expand ${expandido ? 'open' : ''}`}>▼</span>
+                    </div>
+
+                    {expandido && (
+                        <div className="recommendation-content">
+                            <div className="recommendation-desc">{rec.descripcion}</div>
+
+                            {rec.evidencia && <span className="recommendation-evidence">Evidencia: {rec.evidencia}</span>}
+
+                            {rec.detalles && (
+                                <div className="supplement-details">
+                                    {rec.detalles.que_es && (
+                                        <div className="supplement-section">
+                                            <div className="supplement-label">¿Qué es?</div>
+                                            <div className="supplement-value">{rec.detalles.que_es}</div>
+                                        </div>
+                                    )}
+
+                                    {rec.detalles.como_hacerlo && (
+                                        <div className="supplement-section">
+                                            <div className="supplement-label">¿Cómo hacerlo?</div>
+                                            <ul style={{margin: '8px 0 0 20px', color: '#e4e4e7'}}>
+                                                {rec.detalles.como_hacerlo.map((item, i) => <li key={i} style={{marginBottom: '4px'}}>{item}</li>)}
+                                            </ul>
+                                        </div>
+                                    )}
+
+                                    {rec.detalles.componentes && (
+                                        <div className="supplement-section">
+                                            <div className="supplement-label">Componentes</div>
+                                            <ul style={{margin: '8px 0 0 20px', color: '#e4e4e7'}}>
+                                                {rec.detalles.componentes.map((item, i) => <li key={i} style={{marginBottom: '4px'}}>{item}</li>)}
+                                            </ul>
+                                        </div>
+                                    )}
+
+                                    {rec.detalles.tecnicas && (
+                                        <div className="supplement-section">
+                                            <div className="supplement-label">Técnicas</div>
+                                            <ul style={{margin: '8px 0 0 20px', color: '#e4e4e7'}}>
+                                                {rec.detalles.tecnicas.map((item, i) => <li key={i} style={{marginBottom: '4px'}}>{item}</li>)}
+                                            </ul>
+                                        </div>
+                                    )}
+
+                                    {rec.detalles.dosis && (
+                                        <div className="supplement-section">
+                                            <div className="supplement-label">Dosis recomendada</div>
+                                            <div className="supplement-value">{rec.detalles.dosis}</div>
+                                        </div>
+                                    )}
+
+                                    {rec.detalles.formas_recomendadas && (
+                                        <div className="supplement-section">
+                                            <div className="supplement-label">Formas recomendadas</div>
+                                            <ul style={{margin: '8px 0 0 20px', color: '#e4e4e7'}}>
+                                                {rec.detalles.formas_recomendadas.map((item, i) => <li key={i} style={{marginBottom: '4px'}}>{item}</li>)}
+                                            </ul>
+                                        </div>
+                                    )}
+
+                                    {rec.detalles.cuando_tomar && (
+                                        <div className="supplement-section">
+                                            <div className="supplement-label">¿Cuándo tomar?</div>
+                                            <div className="supplement-value">{rec.detalles.cuando_tomar}</div>
+                                        </div>
+                                    )}
+
+                                    {rec.detalles.cuando && (
+                                        <div className="supplement-section">
+                                            <div className="supplement-label">¿Cuándo practicar?</div>
+                                            <div className="supplement-value">{rec.detalles.cuando}</div>
+                                        </div>
+                                    )}
+
+                                    {rec.detalles.forma_optima && (
+                                        <div className="supplement-section">
+                                            <div className="supplement-label">Forma óptima</div>
+                                            <div className="supplement-value">{rec.detalles.forma_optima}</div>
+                                        </div>
+                                    )}
+
+                                    {rec.detalles.combinaciones && (
+                                        <div className="supplement-section">
+                                            <div className="supplement-label">🔗 Combinaciones sugeridas</div>
+                                            <div className="supplement-value">{rec.detalles.combinaciones}</div>
+                                        </div>
+                                    )}
+
+                                    {rec.detalles.absorcion && (
+                                        <div className="supplement-section">
+                                            <div className="supplement-label">💡 Para mejor absorción</div>
+                                            <div className="supplement-value">{rec.detalles.absorcion}</div>
+                                        </div>
+                                    )}
+
+                                    {rec.detalles.efectividad && (
+                                        <div className="supplement-section">
+                                            <div className="supplement-label">Efectividad</div>
+                                            <div className="supplement-value">{rec.detalles.efectividad}</div>
+                                        </div>
+                                    )}
+
+                                    {rec.detalles.tiempo_resultados && (
+                                        <div className="supplement-section">
+                                            <div className="supplement-label">Tiempo para ver resultados</div>
+                                            <div className="supplement-value">{rec.detalles.tiempo_resultados}</div>
+                                        </div>
+                                    )}
+
+                                    {rec.detalles.duracion && (
+                                        <div className="supplement-section">
+                                            <div className="supplement-label">Duración del tratamiento</div>
+                                            <div className="supplement-value">{rec.detalles.duracion}</div>
+                                        </div>
+                                    )}
+
+                                    {rec.detalles.beneficios_extra && (
+                                        <div className="supplement-section">
+                                            <div className="supplement-label">Beneficios adicionales</div>
+                                            <div className="supplement-value">{rec.detalles.beneficios_extra}</div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {rec.contraindicaciones?.length > 0 && (
+                                <div style={{marginTop: '12px', color: '#fca5a5', fontSize: '0.85rem'}}>
+                                    ⚠️ Precaución: {rec.contraindicaciones.join(', ')}
+                                </div>
+                            )}
+
+                            {rec.marketplace?.disponible && (
+                                <div style={{marginTop: '16px', padding: '12px', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '8px'}}>
+                                    <div style={{color: '#6ee7b7', fontSize: '0.85rem', marginBottom: '8px'}}>
+                                        💰 Precio referencia: {rec.marketplace.precio_referencia}
+                                    </div>
+                                    <div style={{color: '#a1a1aa', fontSize: '0.85rem', marginBottom: '12px'}}>
+                                        📍 Dónde conseguirlo: {rec.marketplace.donde}
+                                    </div>
+                                    <div style={{display: 'flex', gap: '8px', flexWrap: 'wrap'}}>
+                                        <button
+                                            className="marketplace-btn"
+                                            onClick={() => window.open(`https://listado.mercadolibre.com.ar/${encodeURIComponent(rec.nombre + ' suplemento')}`, '_blank')}
+                                        >
+                                            🛒 MercadoLibre
+                                        </button>
+                                        <button
+                                            className="marketplace-btn"
+                                            style={{background: 'linear-gradient(135deg, #6366f1, #8b5cf6)'}}
+                                            onClick={() => window.open(`https://www.google.com/search?q=${encodeURIComponent(rec.nombre + ' suplemento comprar argentina')}&tbm=shop`, '_blank')}
+                                        >
+                                            🔍 Google Shopping
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        // ============================================
+        // COMPONENTE DE ANÁLISIS DE LABORATORIO
+        // ============================================
+        function AnalisisLaboratorio({ labData, setLabData }) {
+            const [expandido, setExpandido] = useState(false);
+
+            const parametros = [
+                { id: 'vitD', nombre: 'Vitamina D', unidad: 'ng/mL', min: 30, max: 100, optimo: '40-60' },
+                { id: 'vitB12', nombre: 'Vitamina B12', unidad: 'pg/mL', min: 200, max: 900, optimo: '400-800' },
+                { id: 'hierro', nombre: 'Hierro sérico', unidad: 'µg/dL', min: 60, max: 170, optimo: '80-120' },
+                { id: 'ferritina', nombre: 'Ferritina', unidad: 'ng/mL', min: 20, max: 300, optimo: '50-150' },
+                { id: 'magnesio', nombre: 'Magnesio', unidad: 'mg/dL', min: 1.7, max: 2.4, optimo: '2.0-2.4' },
+                { id: 'tsh', nombre: 'TSH', unidad: 'mUI/L', min: 0.4, max: 4.0, optimo: '1.0-2.5' },
+                { id: 'glucosa', nombre: 'Glucosa', unidad: 'mg/dL', min: 70, max: 100, optimo: '70-90' }
+            ];
+
+            const getStatus = (valor, param) => {
+                if (!valor) return null;
+                const v = parseFloat(valor);
+                if (v < param.min) return 'low';
+                if (v > param.max) return 'high';
+                return 'normal';
+            };
+
+            const getStatusText = (status) => {
+                if (status === 'low') return 'Bajo';
+                if (status === 'high') return 'Alto';
+                return 'Normal';
+            };
+
+            const deficiencias = parametros.filter(p => {
+                const status = getStatus(labData[p.id], p);
+                return status === 'low' || status === 'high';
+            });
+
+            return (
+                <div className="lab-section">
+                    <div
+                        className="lab-section-title"
+                        style={{cursor: 'pointer'}}
+                        onClick={() => setExpandido(!expandido)}
+                    >
+                        <span>🧪 Análisis de Laboratorio</span>
+                        <span style={{marginLeft: 'auto', fontSize: '0.9rem'}}>{expandido ? '▲' : '▼'}</span>
+                    </div>
+
+                    {!expandido && (
+                        <p style={{color: '#a1a1aa', fontSize: '0.9rem'}}>
+                            Cargá tus valores de laboratorio para detectar deficiencias que pueden afectar tu sueño.
+                            <span style={{color: '#6ee7b7', cursor: 'pointer'}} onClick={() => setExpandido(true)}> Cargar valores →</span>
+                        </p>
+                    )}
+
+                    {expandido && (
+                        <>
+                            <p style={{color: '#a1a1aa', fontSize: '0.85rem', marginBottom: '16px'}}>
+                                Ingresá los valores de tu último análisis (dejá vacío lo que no tengas):
+                            </p>
+
+                            <div className="lab-grid">
+                                {parametros.map(p => {
+                                    const status = getStatus(labData[p.id], p);
+                                    return (
+                                        <div key={p.id} className="lab-input-group">
+                                            <div className="lab-input-label">{p.nombre}</div>
+                                            <div className="lab-input-row">
+                                                <input
+                                                    type="number"
+                                                    className="lab-input"
+                                                    value={labData[p.id] || ''}
+                                                    onChange={(e) => setLabData(prev => ({...prev, [p.id]: e.target.value}))}
+                                                    placeholder={p.optimo}
+                                                    step="0.1"
+                                                />
+                                                <span className="lab-unit">{p.unidad}</span>
+                                            </div>
+                                            {status && (
+                                                <span className={`lab-status ${status}`} style={{marginTop: '6px', display: 'inline-block'}}>
+                                                    {getStatusText(status)}
+                                                </span>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            {deficiencias.length > 0 && (
+                                <div className="deficiency-alert">
+                                    <div className="deficiency-alert-title">⚠️ Valores a revisar con tu médico:</div>
+                                    {deficiencias.map(p => {
+                                        const status = getStatus(labData[p.id], p);
+                                        return (
+                                            <div key={p.id} className="deficiency-alert-item">
+                                                • <strong>{p.nombre}</strong>: {labData[p.id]} {p.unidad} ({getStatusText(status)}) - Óptimo: {p.optimo}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </>
+                    )}
+                </div>
+            );
+        }
+
+        // ============================================
+        // COMPONENTE DE ANÁLISIS DE ADN
+        // ============================================
+        function AnalisisADN({ adnData, setAdnData }) {
+            const [expandido, setExpandido] = useState(false);
+
+            const variantes = [
+                {
+                    id: 'clock',
+                    gen: 'CLOCK',
+                    descripcion: 'Regula el ritmo circadiano',
+                    opciones: [
+                        { valor: 'normal', texto: 'Normal', efecto: 'Ritmo circadiano típico' },
+                        { valor: 'variante', texto: 'Variante nocturna', efecto: 'Tendencia a ser búho nocturno' }
+                    ]
+                },
+                {
+                    id: 'per2',
+                    gen: 'PER2',
+                    descripcion: 'Afecta horarios de sueño',
+                    opciones: [
+                        { valor: 'normal', texto: 'Normal', efecto: 'Horarios flexibles' },
+                        { valor: 'madrugador', texto: 'Madrugador', efecto: 'Tendencia a despertar temprano' }
+                    ]
+                },
+                {
+                    id: 'adora2a',
+                    gen: 'ADORA2A',
+                    descripcion: 'Sensibilidad a la cafeína',
+                    opciones: [
+                        { valor: 'normal', texto: 'Normal', efecto: 'Metaboliza cafeína normalmente' },
+                        { valor: 'sensible', texto: 'Alta sensibilidad', efecto: 'La cafeína afecta más el sueño' }
+                    ]
+                },
+                {
+                    id: 'comt',
+                    gen: 'COMT',
+                    descripcion: 'Metabolismo de catecolaminas',
+                    opciones: [
+                        { valor: 'normal', texto: 'Val/Val (Rápido)', efecto: 'Buen manejo del estrés' },
+                        { valor: 'lento', texto: 'Met/Met (Lento)', efecto: 'Mayor sensibilidad al estrés, puede beneficiarse de magnesio' }
+                    ]
+                },
+                {
+                    id: 'mthfr',
+                    gen: 'MTHFR',
+                    descripcion: 'Metabolismo de folato y B12',
+                    opciones: [
+                        { valor: 'normal', texto: 'Normal', efecto: 'Metabolismo de B vitaminas normal' },
+                        { valor: 'variante', texto: 'Variante (C677T/A1298C)', efecto: 'Puede necesitar formas activas de B vitaminas' }
+                    ]
+                }
+            ];
+
+            const variantesSeleccionadas = Object.entries(adnData).filter(([k, v]) => v && v !== 'normal');
+
+            return (
+                <div className="lab-section" style={{background: 'rgba(139, 92, 246, 0.1)', borderColor: 'rgba(139, 92, 246, 0.3)'}}>
+                    <div
+                        className="lab-section-title"
+                        style={{color: '#c4b5fd', cursor: 'pointer'}}
+                        onClick={() => setExpandido(!expandido)}
+                    >
+                        <span>🧬 Análisis de ADN</span>
+                        <span style={{marginLeft: 'auto', fontSize: '0.9rem'}}>{expandido ? '▲' : '▼'}</span>
+                    </div>
+
+                    {!expandido && (
+                        <p style={{color: '#a1a1aa', fontSize: '0.9rem'}}>
+                            Si tenés resultados de tests genéticos (23andMe, AncestryDNA, etc.), cargá tus variantes relacionadas con el sueño.
+                            <span style={{color: '#c4b5fd', cursor: 'pointer'}} onClick={() => setExpandido(true)}> Cargar datos →</span>
+                        </p>
+                    )}
+
+                    {expandido && (
+                        <>
+                            <p style={{color: '#a1a1aa', fontSize: '0.85rem', marginBottom: '16px'}}>
+                                Seleccioná las variantes que tengas según tu informe genético:
+                            </p>
+
+                            {variantes.map(v => (
+                                <div key={v.id} style={{marginBottom: '16px'}}>
+                                    <div style={{color: '#e4e4e7', marginBottom: '6px'}}>
+                                        <strong>{v.gen}</strong> <span style={{color: '#a1a1aa', fontSize: '0.85rem'}}>- {v.descripcion}</span>
+                                    </div>
+                                    <div className="dna-toggle-group">
+                                        {v.opciones.map(op => (
+                                            <button
+                                                key={op.valor}
+                                                className={`dna-toggle ${adnData[v.id] === op.valor ? 'selected' : ''}`}
+                                                onClick={() => setAdnData(prev => ({...prev, [v.id]: op.valor}))}
+                                            >
+                                                {op.texto}
+                                            </button>
+                                        ))}
+                                        <button
+                                            className={`dna-toggle ${!adnData[v.id] ? 'selected' : ''}`}
+                                            onClick={() => setAdnData(prev => ({...prev, [v.id]: null}))}
+                                            style={{opacity: 0.7}}
+                                        >
+                                            No sé
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+
+                            {variantesSeleccionadas.length > 0 && (
+                                <div className="deficiency-alert" style={{background: 'rgba(139, 92, 246, 0.15)', borderColor: 'rgba(139, 92, 246, 0.4)'}}>
+                                    <div className="deficiency-alert-title" style={{color: '#c4b5fd'}}>🧬 Recomendaciones según tu perfil genético:</div>
+                                    {adnData.clock === 'variante' && (
+                                        <div className="deficiency-alert-item" style={{color: '#ddd6fe'}}>
+                                            • <strong>CLOCK variante</strong>: Tu reloj biológico tiende a retrasarse. Evitá luz azul después de las 20hs y considerá melatonina de liberación prolongada.
+                                        </div>
+                                    )}
+                                    {adnData.adora2a === 'sensible' && (
+                                        <div className="deficiency-alert-item" style={{color: '#ddd6fe'}}>
+                                            • <strong>ADORA2A sensible</strong>: Evitá cafeína completamente después del mediodía. Incluso café de la mañana puede afectar tu sueño.
+                                        </div>
+                                    )}
+                                    {adnData.comt === 'lento' && (
+                                        <div className="deficiency-alert-item" style={{color: '#ddd6fe'}}>
+                                            • <strong>COMT lento</strong>: El magnesio glicinato es especialmente beneficioso para vos. Considerá técnicas de relajación activa.
+                                        </div>
+                                    )}
+                                    {adnData.mthfr === 'variante' && (
+                                        <div className="deficiency-alert-item" style={{color: '#ddd6fe'}}>
+                                            • <strong>MTHFR variante</strong>: Preferí formas metiladas de B vitaminas (metilfolato, metilcobalamina) si suplementás.
+                                        </div>
+                                    )}
+                                    {adnData.per2 === 'madrugador' && (
+                                        <div className="deficiency-alert-item" style={{color: '#ddd6fe'}}>
+                                            • <strong>PER2 madrugador</strong>: Tu cuerpo naturalmente quiere despertar temprano. Acostarte más temprano puede mejorar tu calidad de sueño.
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </>
+                    )}
+                </div>
+            );
+        }
+
+        // ============================================
+        // PANTALLA DE RESULTADOS
+        // ============================================
+        function ResultadoScreen({ resultado, formData, onReset }) {
+            const [labData, setLabData] = useState({});
+            const [adnData, setAdnData] = useState({});
+
+            const getSeverityClass = (s) => {
+                if (s === 'sin_insomnio') return 'severity-none';
+                if (s === 'leve') return 'severity-mild';
+                if (s === 'moderado') return 'severity-moderate';
+                return 'severity-severe';
+            };
+
+            const getSeverityText = (s) => {
+                if (s === 'sin_insomnio') return 'Sin Insomnio Clínico';
+                if (s === 'leve') return 'Insomnio Leve';
+                if (s === 'moderado') return 'Insomnio Moderado';
+                return 'Insomnio Severo';
+            };
+
+            return (
+                <>
+                    <div className="card result-card">
+                        <h2>📊 Tu Resultado Personalizado</h2>
+
+                        <div style={{display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px', flexWrap: 'wrap'}}>
+                            <div className={`severity-badge ${getSeverityClass(resultado.severidad)}`}>
+                                {getSeverityText(resultado.severidad)}
+                            </div>
+                            <div style={{color: '#a1a1aa'}}>
+                                Precisión del análisis: <strong style={{color: '#818cf8'}}>{resultado.precision}%</strong>
+                            </div>
+                        </div>
+
+                        <p style={{color: '#d1d5db', marginBottom: '16px', fontSize: '1.05rem'}}>
+                            {resultado.descripcion}
+                        </p>
+
+                        <div style={{display: 'flex', gap: '24px', flexWrap: 'wrap', marginTop: '16px'}}>
+                            <div><strong style={{color: '#818cf8'}}>ISI:</strong> <span style={{color: '#f4f4f5'}}>{resultado.isi_score}/28</span></div>
+                            {resultado.stop_bang_score !== null && <div><strong style={{color: '#818cf8'}}>STOP-BANG:</strong> <span style={{color: '#f4f4f5'}}>{resultado.stop_bang_score}/8</span></div>}
+                            {resultado.imc && <div><strong style={{color: '#818cf8'}}>IMC:</strong> <span style={{color: '#f4f4f5'}}>{resultado.imc.toFixed(1)}</span></div>}
+                            {resultado.fenotipo && <div><strong style={{color: '#818cf8'}}>Tipo:</strong> <span style={{color: '#f4f4f5'}}>{resultado.fenotipo.nombre}</span></div>}
+                        </div>
+                    </div>
+
+                    {/* BANDERAS ROJAS URGENTES */}
+                    {resultado.banderas_rojas.length > 0 && (
+                        <div className="card">
+                            <h2>🚨 Importante</h2>
+                            {resultado.banderas_rojas.map((f, i) => (
+                                <div key={i} className="urgent-flag">
+                                    <div className="urgent-flag-title">{f.titulo}</div>
+                                    <div className="urgent-flag-action">{f.accion}</div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* PRECAUCIONES (más amigables) */}
+                    {resultado.precauciones.length > 0 && (
+                        <div className="card">
+                            <h2>💡 Cosas a tener en cuenta</h2>
+                            <p style={{color: '#a1a1aa', marginBottom: '16px', fontSize: '0.9rem'}}>
+                                Basándonos en tus datos, te sugerimos prestar atención a lo siguiente:
+                            </p>
+                            {resultado.precauciones.map((p, i) => (
+                                <div key={i} className="precaution-card">
+                                    <div className="precaution-title">{p.titulo}</div>
+                                    <div className="precaution-text">{p.texto}</div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* RECOMENDACIONES EXPANDIBLES */}
+                    <div className="card">
+                        <h2>💊 Recomendaciones Personalizadas</h2>
+                        <p style={{color: '#a1a1aa', marginBottom: '16px', fontSize: '0.9rem'}}>
+                            Tocá cada recomendación para ver más detalles, instrucciones de uso y opciones de compra:
+                        </p>
+                        {resultado.recomendaciones.map((r, i) => (
+                            <RecomendacionExpandible key={r.id} rec={r} index={i} />
+                        ))}
+                    </div>
+
+                    {/* LABORATORIO Y ADN */}
+                    <div className="card">
+                        <h2>🔬 Personalización Avanzada</h2>
+                        <p style={{color: '#a1a1aa', marginBottom: '20px', fontSize: '0.9rem'}}>
+                            Cargá tus datos de laboratorio y/o análisis genético para obtener recomendaciones aún más precisas:
+                        </p>
+
+                        <AnalisisLaboratorio labData={labData} setLabData={setLabData} />
+                        <AnalisisADN adnData={adnData} setAdnData={setAdnData} />
+                    </div>
+
+                    <div className="disclaimer">
+                        <strong>⚕️ Importante:</strong> Esta evaluación es orientativa y NO reemplaza la consulta médica.
+                        Las recomendaciones deben ser validadas por un profesional de la salud antes de implementarlas.
+                    </div>
+
+                    <button className="btn btn-primary" style={{marginTop: '20px'}} onClick={onReset}>
+                        ← Nueva Evaluación
+                    </button>
+                </>
+            );
+        }
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
